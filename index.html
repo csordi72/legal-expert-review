@@ -365,8 +365,11 @@ async function submitReview(){
 function clearAll(){
   if(!confirm("Biztosan törlöd az összes helyileg mentett választ?")) return;
   localStorage.removeItem("legal_review_workspace_v6");
+  localStorage.removeItem("legal_review_workspace_v6_submitted");
   document.querySelectorAll("input").forEach(e=>e.checked=false);
   document.querySelectorAll("textarea").forEach(e=>e.value="");
+  const submissionCard=document.getElementById("submissionCard");
+  if(submissionCard) submissionCard.style.display="none";
   document.getElementById("status").textContent="Válaszok törölve";
 }
 document.addEventListener("input",save);
