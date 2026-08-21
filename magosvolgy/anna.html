@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MagosVölgy – Anna validáció</title>
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;margin:0;background:#f6f7f8;color:#1d252b}
+.wrap{max-width:720px;margin:auto;padding:18px 16px 100px}
+.card{background:white;border:1px solid #dfe4e8;border-radius:16px;padding:18px;margin-top:20px}
+h1{font-size:28px;margin:12px 0} h2{font-size:22px}
+.muted{color:#66727d;line-height:1.5}
+.brand{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#245b47}
+.progress{height:7px;background:#e3e7ea;border-radius:99px;overflow:hidden;margin:14px 0 6px}
+.progress span{display:block;height:100%;background:#245b47;width:0}
+.option{display:block;width:100%;padding:13px;margin:8px 0;border-radius:12px;border:1px solid #dfe4e8;background:white;text-align:left;font-weight:700}
+.option.active{background:#e9f2ee;border-color:#245b47;color:#245b47}
+textarea{width:100%;min-height:100px;margin-top:10px;padding:12px;border-radius:10px;border:1px solid #dfe4e8;font:inherit;box-sizing:border-box}
+.nav{position:fixed;left:0;right:0;bottom:0;background:white;border-top:1px solid #dfe4e8;padding:12px 16px}
+.navin{max-width:720px;margin:auto;display:flex;gap:10px}
+button.navbtn{flex:1;padding:13px;border:0;border-radius:12px;font-weight:800}
+.primary{background:#245b47;color:white} .secondary{background:#edf0f2;color:#1d252b}
+.hidden{display:none}
+.small{font-size:12px;color:#66727d}
+.primary-submit{background:#245b47!important;color:white!important;text-align:center!important;margin-top:18px!important}
+.submit-result{margin-top:16px;padding:14px;border:1px solid #dfe4e8;border-radius:12px;background:#f6f8f7}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="brand">MagosVölgy · folyamatvalidáció</div>
+<div class="progress"><span id="bar"></span></div>
+<div id="status" class="small">Kezdés</div>
+<section id="start">
+  <h1>Anna – jelenlegi működés validálása</h1>
+  <p class="muted">Az eddigi beszélgetéseink alapján összeraktuk a hozzád kapcsolódó folyamatokat. Állításonként csak azt kell jelölnöd, hogy helyes, pontosítanád, vagy már nem így működik.</p>
+  <div class="card"><b>A válaszok automatikusan mentődnek ezen az eszközön.</b></div>
+</section>
+<section id="question" class="hidden">
+  <h2 id="sectionTitle"></h2>
+  <div class="card">
+    <div id="qid" class="small"></div>
+    <p id="qtext" style="font-size:18px;line-height:1.45"></p>
+    <button class="option" data-value="VALIDATED">✓ Helyes</button>
+    <button class="option" data-value="CORRECTED">Pontosítanám</button>
+    <button class="option" data-value="CHANGED">Már nem így működik</button>
+    <div id="commentWrap" class="hidden"><textarea id="comment" placeholder="Írd le röviden a pontosítást vagy változást."></textarea></div>
+  </div>
+</section>
+<section id="done" class="hidden">
+  <h1>Kész</h1>
+  <p class="muted">A validáció befejeződött.</p>
+  <div class="card">
+    <div id="summary"></div>
+    <button id="submitReview" class="option primary-submit">Válaszok elküldése</button>
+    <div id="submissionCard" class="submit-result hidden"><b id="submissionTitle">Beküldés</b><div id="submissionMessage" class="muted"></div></div>
+  </div>
+</section>
+</div>
+<div class="nav"><div class="navin"><button id="back" class="navbtn secondary">Vissza</button><button id="next" class="navbtn primary">Validáció indítása</button></div></div>
+<script>
+var sections = [["Szezonzáró kérdőív", [["ANN-SZ-001", "A tagok felé a szezonzárási folyamat a szezonzáró kérdőív kommunikációjával indul."], ["ANN-SZ-002", "A kérdőív Google Formsban készül."], ["ANN-SZ-003", "A kérdőív linkjét hírlevélben küldöd ki."], ["ANN-SZ-004", "Az előző évi kérdőívet használod kiindulópontként."]]], ["Feldolgozás és prezentáció", [["ANN-PRES-001", "A válaszokat már a kitöltési időszakban is olvasod."], ["ANN-PRES-002", "A tényleges kiértékelést a kitöltési határidő lezárása után végzed."], ["ANN-PRES-003", "A prezentáció Google Slidesban készül."], ["ANN-PRES-004", "Az előző évi prezentációt használod kiindulópontként."]]], ["Megújítás és sales", [["ANN-SALES-001", "Először a meglévő tagok jelentkezhetnek."], ["ANN-SALES-002", "A meglévő tagok után a várólistán lévők és a tagi ajánlással érkezők kapnak lehetőséget."], ["ANN-SALES-003", "Nyilvános toborzás csak akkor szükséges, ha ezek után marad szabad kapacitás."]]]];
+var flat = [];
+for (var s=0; s<sections.length; s++) { for (var i=0; i<sections[s][1].length; i++) { flat.push({section:sections[s][0], id:sections[s][1][i][0], text:sections[s][1][i][1]}); } }
+var index = -1;
+var state = {};
+try { state = JSON.parse(localStorage.getItem("mv_anna_v03") || "{}"); } catch(e) { state = {}; }
+function save() { try { localStorage.setItem("mv_anna_v03", JSON.stringify(state)); } catch(e) {} }
+function show(id) { document.getElementById("start").classList.add("hidden"); document.getElementById("question").classList.add("hidden"); document.getElementById("done").classList.add("hidden"); document.getElementById(id).classList.remove("hidden"); }
+function render() {
+  var next = document.getElementById("next"), back = document.getElementById("back"), bar = document.getElementById("bar"), status = document.getElementById("status");
+  if (index < 0) { show("start"); back.disabled = true; next.disabled = false; next.textContent = "Validáció indítása"; bar.style.width = "0%"; status.textContent = "Kezdés"; return; }
+  if (index >= flat.length) { show("done"); back.disabled = false; next.classList.add("hidden"); bar.style.width = "100%"; status.textContent = "Kész"; renderSummary(); return; }
+  next.classList.remove("hidden"); show("question"); back.disabled = false;
+  var q = flat[index], r = state[q.id] || {};
+  document.getElementById("sectionTitle").textContent = q.section; document.getElementById("qid").textContent = q.id; document.getElementById("qtext").textContent = q.text; document.getElementById("comment").value = r.comment || "";
+  var opts = document.querySelectorAll(".option[data-value]"); for (var j=0; j<opts.length; j++) { opts[j].classList.remove("active"); if (opts[j].getAttribute("data-value") === r.status) opts[j].classList.add("active"); }
+  var needsComment = r.status === "CORRECTED" || r.status === "CHANGED"; document.getElementById("commentWrap").classList.toggle("hidden", !needsComment);
+  var valid = !!r.status && (!needsComment || (r.comment || "").trim().length > 0); next.disabled = !valid; next.textContent = (index === flat.length - 1) ? "Befejezés" : "Következő";
+  bar.style.width = ((index) / flat.length * 100) + "%"; status.textContent = (index + 1) + " / " + flat.length;
+}
+function renderSummary() { var a=0,b=0,c=0; for (var i=0;i<flat.length;i++) { var r=state[flat[i].id]||{}; if(r.status==="VALIDATED")a++; if(r.status==="CORRECTED")b++; if(r.status==="CHANGED")c++; } document.getElementById("summary").innerHTML = "<b>Helyes:</b> "+a+"<br><b>Pontosítandó:</b> "+b+"<br><b>Megváltozott:</b> "+c; }
+document.getElementById("next").addEventListener("click", function() { index++; render(); });
+document.getElementById("back").addEventListener("click", function() { if(index > -1) index--; render(); });
+var optionButtons = document.querySelectorAll(".option[data-value]"); for (var i=0;i<optionButtons.length;i++) { optionButtons[i].addEventListener("click", function() { if(index < 0 || index >= flat.length) return; var q=flat[index]; state[q.id] = state[q.id] || {}; state[q.id].status = this.getAttribute("data-value"); if(state[q.id].status==="VALIDATED") state[q.id].comment=""; save(); render(); }); }
+document.getElementById("comment").addEventListener("input", function() { if(index < 0 || index >= flat.length) return; var q=flat[index]; state[q.id] = state[q.id] || {}; state[q.id].comment = this.value; save(); render(); });
+const SUBMISSION_ENDPOINT = "https://submit-form.com/sLJVzvHOi";
+function collectReview() { var result = []; for(var i=0;i<flat.length;i++) { var q=flat[i], r=state[q.id]||{}; result.push({statement_id:q.id, process:q.section, statement:q.text, status:r.status||"", comment:r.comment||""}); } return {project:"MagosVolgy",review_type:"process_validation",respondent:"Anna",version:"v1.0-hosted",submitted_at:new Date().toISOString(),responses:result}; }
+document.getElementById("submitReview").addEventListener("click", async function() { var btn=this, card=document.getElementById("submissionCard"), title=document.getElementById("submissionTitle"), msg=document.getElementById("submissionMessage"); card.classList.remove("hidden"); title.textContent="Beküldés folyamatban…"; msg.textContent="Kérlek, ne zárd be az oldalt."; btn.disabled=true; try { var response=await fetch(SUBMISSION_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(collectReview())}); if(!response.ok) throw new Error("HTTP "+response.status); localStorage.setItem("mv_anna_v03_submitted","true"); title.textContent="Köszönöm, a válaszok megérkeztek."; msg.textContent="A beküldés sikeres. További teendőd nincs."; btn.textContent="Válaszok elküldve"; } catch(err) { title.textContent="A beküldés nem sikerült"; msg.textContent="Kérlek próbáld meg újra. Ha a hiba megmarad, jelezd Istvánnak."; btn.disabled=false; } });
+render();
+</script>
+</body>
+</html>
